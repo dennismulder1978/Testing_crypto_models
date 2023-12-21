@@ -5,7 +5,7 @@ def create_arrays(coin_array, N_STEPS):
     """
     Creates a numpy array with multiple N_STEPS-hours cohorts of 4 trade values of a cryptocoin. 
     Returns:
-        _type_: _description_
+        np.array of multiple cohort in shape (amount of cohorts, N_STEPS, 4)
     """
     for i in range(0, len(coin_array)-N_STEPS):
         if i == 0:
