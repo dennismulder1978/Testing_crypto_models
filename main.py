@@ -7,3 +7,5 @@ coin_array = np.array(coin_data.drop(coin_data[['Vol.', 'Date']], axis=1))[:30]
 N_STEPS = 24
 
 test_array = create_arrays(coin_array=coin_array, N_STEPS=N_STEPS)
+
+# yes
