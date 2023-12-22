@@ -13,5 +13,8 @@ model_path = './models/'
 model_dict = list_of_LSTM_models(model_path=model_path) 
 
 ## step 3: Test each model at different percentages. 
-for each in model_dict.items():
-    print(each)
+key_list = list(model_dict.keys())
+print(key_list)
+print(model_dict[key_list[0]].keys())
+print(model_dict[key_list[0]]['Model'])
+print(model_dict[key_list[0]]['Scaler'])
