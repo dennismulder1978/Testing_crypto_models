@@ -12,7 +12,8 @@ def create_arrays(file_name: str, N_STEPS: int):
     """
     
     coin_data = pd.read_csv(file_name)
-    coin_array = np.array(coin_data.drop(coin_data[['Vol.', 'Date']], axis=1))[:26]
+    column_list = coin_data.columns
+    coin_array = np.array(coin_data.drop(coin_data[[column_list[0], column_list[-1]]], axis=1))[:26] # type: ignore
 
     
     for i in range(0, len(coin_array)-N_STEPS):
@@ -47,7 +48,17 @@ def list_of_LSTM_models(model_path):
 
         
 def test_models(test_array:np.ndarray, model_dict: dict):
+    """Makes prediction based on the model and input-arrays
+
+    Args:
+        test_array (np.ndarray): input array of crypto-trade-data
+        model_dict (dict): list of available models/ scalers 
+
+    Returns:
+        (dict): per model the results in cohorts
+    """    
     key_list = list(model_dict.keys())
+    results = {}
     
     for each_model in key_list:
         # loading model
@@ -57,15 +68,18 @@ def test_models(test_array:np.ndarray, model_dict: dict):
         file_name_scaler = './Models/' + model_dict[each_model]['Scaler']
         with open(file_name_scaler, "rb") as f:
             scaler = pickle.load(f)
-        
+
         # Each cohort
-        for each_cohort in test_array:
+        for i, each_cohort in enumerate(test_array):
             scaled_array = scaler.fit_transform(each_cohort).reshape(1,24,4)
-            y_pred = model.predict(scaled_array, verbose=0)[0][0]
-            print(y_pred)
-        input_pred = [[y_pred, y_pred, y_pred, y_pred]]
-        #  scaler.inverse_transform(input_pred)[0][0]
-    # except Exception as err:
-    #     log(f'ERROR BALANCE,{coin},1,1,1,1,{err}')
-    #     send_mail(action='Error', stringer=f'GET_CANDLES went wrong: {err}')
-    #     print(err)
+            y_pred = model.predict(scaled_array, verbose=1)[0][0]
+            input_pred = [[y_pred, y_pred, y_pred, y_pred]]
+            real_pred_list = [each_cohort[23][3], scaler.inverse_transform(input_pred)[0][3]]
+            print(real_pred_list)
+            
+            if results.get(each_model) is None:
+                results[each_model] = {i: real_pred_list}
+            else:
+                results[each_model].update({i: real_pred_list})
+
+    return results

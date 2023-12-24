@@ -13,8 +13,8 @@ test_array = create_arrays(file_name=file_name, N_STEPS=N_STEPS)
 model_dict = list_of_LSTM_models(model_path=model_path) 
 
 # step 3: Test each model at different percentages. 
-test_models(test_array=test_array, model_dict=model_dict)
-
+prediction_dict = test_models(test_array=test_array, model_dict=model_dict)
+print(prediction_dict)
 
 
 
