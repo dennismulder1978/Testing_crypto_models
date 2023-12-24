@@ -1,4 +1,3 @@
-from const import *
 from func import *
 
 ## input values:
