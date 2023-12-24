@@ -4,13 +4,14 @@ import os
 import pickle
 import tensorflow as tf
 
-def create_arrays(file_name: str, N_STEPS: int):
+def create_arrays(crypto_data_path: str, N_STEPS: int):
     """
     Creates a numpy array with multiple N_STEPS-hours cohorts of 4 trade values of a cryptocoin. 
     Returns:
         np.array of multiple cohort in shape (amount of cohorts, N_STEPS, 4)
     """
-    
+    file_list = os.listdir(path=crypto_data_path)
+    file_name = crypto_data_path + file_list[0]
     coin_data = pd.read_csv(file_name)
     column_list = coin_data.columns
     coin_array = np.array(coin_data.drop(coin_data[[column_list[0], column_list[-1]]], axis=1))[:26] # type: ignore
