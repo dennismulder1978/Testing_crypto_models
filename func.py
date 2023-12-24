@@ -41,7 +41,9 @@ def list_of_LSTM_models(model_path):
         temp = each.split('_')
         index_name = f'{temp[3]}_{temp[4]}'
         if temp_dict.get(index_name) is None:
-            temp_dict[index_name] = {temp[5]: each}
+            temp_dict[index_name] = {'N-STEPS': int(temp[3][1:3])}
+            temp_dict[index_name].update({'F-STEPS': int(temp[4][1:2])})
+            temp_dict[index_name].update({temp[5]: each})
         else:
             temp_dict[index_name].update({temp[5]: each})
             
