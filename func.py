@@ -7,7 +7,7 @@ import tensorflow as tf
 
 def create_arrays(crypto_data_path: str, N_STEPS_list: list):
     """
-    Creates a numpy array with multiple N_STEPS-hours cohorts of 4 trade values of a cryptocoin. 
+    Creates a numpy array with multiple N_STEPS-hours cohorts of 4 trade values of a cryptocoin.
     Returns:
         dict with np.arrays of multiple cohort in shape (amount of cohorts, N_STEPS, 4)
     """
@@ -15,7 +15,7 @@ def create_arrays(crypto_data_path: str, N_STEPS_list: list):
     file_name = crypto_data_path + file_list[0]
     coin_data = pd.read_csv(file_name)
     column_list = coin_data.columns
-    coin_array = np.array(coin_data.drop(coin_data[[column_list[0], column_list[-1]]], axis=1))[:30] # type: ignore
+    coin_array = np.array(coin_data.drop(coin_data[[column_list[0], column_list[-1]]], axis=1))[:] # type: ignore
     results = {}
 
     for N_STEPS in N_STEPS_list:
@@ -39,12 +39,12 @@ def list_of_LSTM_models(model_path):
     Returns:
         dict: different models/ scalers
     """
-        
+
     temp_dict = {}
     n_list = []
     # create list of all available files
     file_list = os.listdir(path=model_path)
-    
+
     # process each file into dictionary
     for each in file_list:
         temp = each.split('_')
@@ -58,50 +58,73 @@ def list_of_LSTM_models(model_path):
     # fill n_list with all different n_steps
     for each in temp_dict.keys():
         n_list.append(temp_dict[each]['N_STEPS'])
-    n_list = sorted(list(set(n_list)))        
+    n_list = sorted(list(set(n_list)))
     return temp_dict, n_list
 
-        
-def test_models(test_array_dict: dict, 
-                model_dict: dict, 
+
+def test_models(test_array_dict: dict,
+                model_dict: dict,
                 percentage_list: list):
     """Makes prediction based on the model and input-arrays
 
     Args:
         test_array_dict (dict): dict of input arrays containing crypto-trade-data
-        model_dict (dict): list of available models/ scalers 
+        model_dict (dict): list of available models/ scalers
         percentage_list (list): list of testable percentages
     Returns:
         (dict): per model the results in cohorts
-    """    
+    """
     results = {}
     models_key_list = list(model_dict.keys())
-    
+
     for each_model in models_key_list:
         # loading model
         file_name_model = './Models/' + model_dict[each_model]['Model']
         model = tf.keras.models.load_model(file_name_model)  # <-- model
-        
+
         # scaler
         file_name_scaler = './Models/' + model_dict[each_model]['Scaler']
         with open(file_name_scaler, "rb") as f:
             scaler = pickle.load(f)  # <-- Scaler
-        
+
         # selecting appropriate n_steps_array
         n_steps = model_dict[each_model]['N_STEPS']  # <-- n_steps
+        f_steps = model_dict[each_model]['F_STEPS']  # <-- f_steps
         test_array = test_array_dict[n_steps]  # <-- appropriate n_steps_array
-        
+
         # Each cohort
+        cohort_results_list = []
         for i, each_cohort in enumerate(test_array):
-            scaled_array = scaler.fit_transform(each_cohort).reshape(1,each_cohort.shape[0],each_cohort[1])
-            y_pred = model.predict(scaled_array, verbose=1)[0][0]
+            scaled_array = scaler.fit_transform(each_cohort).reshape(1,each_cohort.shape[0],each_cohort.shape[1])
+            y_pred = model.predict(scaled_array, verbose=0)[0][0]
             input_pred = [[y_pred, y_pred, y_pred, y_pred]]
             real_pred_list = [each_cohort[23][3], scaler.inverse_transform(input_pred)[0][3]]
-            
-            if results.get(each_model) is None:
-                results[each_model] = {i: real_pred_list}
-            else:
-                results[each_model].update({i: real_pred_list})
+            cohort_results_list.append(real_pred_list)
+            print('.', end='')
+        print()
         # determine profit/ loss per model per percentage based on the results.
-        
+        for buy_perc in percentage_list:
+            for sell_perc in percentage_list:
+                euro = 0
+                coin = 1000
+                for i in range (f_steps, len(cohort_results_list)):
+                    temp_result = cohort_results_list[i][0] / cohort_results_list[i-f_steps][1]
+                    if (euro > 0) & (temp_result > ((buy_perc / 100) + 1)):
+                        # print(f'Buy action: {temp_result}, {((buy_perc / 100) + 1)}, {euro}, {coin}')
+                        coin = euro / cohort_results_list[i][0]
+                        euro = 0
+                    elif (coin > 0) & (temp_result < (1 - (sell_perc / 100))):
+                        # print(f'Sell action: {temp_result}, {(1 - (sell_perc / 100))}, {euro}, {coin}')
+                        euro = coin * cohort_results_list[i][0]
+                        coin = 0
+                    else:
+                        # print(f'No action: {temp_result}, {((buy_perc / 100) + 1)}, {(1 - (sell_perc / 100))}, {euro}, {coin}')
+                        pass
+                #record results
+                result_name = f'{each_model}-buy={buy_perc}-sell={sell_perc}'
+                if coin == 0:
+                    coin = euro / cohort_results_list[-1][0]
+                results[result_name] = coin
+
+
     return results
