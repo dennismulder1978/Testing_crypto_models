@@ -14,8 +14,8 @@ test_array_dict = create_arrays(crypto_data_path=crypto_data_path,
                                 N_STEPS_list=n_list)
 
 # step 3: Test each model at different percentages. 
-prediction_dict = test_models(test_array_dict=test_array_dict,
-                              model_dict=model_dict,
+prediction_dict = test_models(test_array_dict=test_array_dict, 
+                              model_dict=model_dict, 
                               percentage_list=percentage_list)
 
 result = dict(sorted(prediction_dict.items(), key=lambda item: item[1], reverse=True))
