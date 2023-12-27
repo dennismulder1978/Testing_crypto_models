@@ -81,7 +81,7 @@ def test_models(test_array_dict: dict,
     """
     results = {}
     models_key_list = list(model_dict.keys())
-
+    
     for each_model in models_key_list:
         # loading model
         file_name_model = './Models/' + model_dict[each_model]['Model']
@@ -131,11 +131,23 @@ def test_models(test_array_dict: dict,
                 if coin == 0:
                     coin = euro / cohort_results_list[-1][0]
                 results[result_name] = coin
+                f = open('./results/test.csv', 'a')
+                f.write(f'{each_model},{buy_perc},{sell_perc},{coin}\n')
+                f.close()
         print(f'Done calculating profits for model: {each_model}.')
     print('Done calculating profits for all models.')
     return results
 
 def save_dict(saving_dict: dict, file_name: str):
+    """Saves results dict
+
+    Args:
+        saving_dict (dict): _description_
+        file_name (str): _description_
+
+    Returns:
+        None: None
+    """    
     file_name = './results/' + file_name + '_' + str(int(dt.now().timestamp()))
     try:    
         f = open(file_name, 'a')
@@ -148,3 +160,4 @@ def save_dict(saving_dict: dict, file_name: str):
         f.close()
     except Exception as e:
         print(e)
+    return None
