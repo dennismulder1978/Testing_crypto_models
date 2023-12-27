@@ -1,10 +1,10 @@
-from audioop import reverse
 from func import *
 
 ## input values:
 crypto_data_path = './crypto_data/'
 model_path = './models/'
 percentage_list = [1, 2, 3, 4, 5, 6, 7]
+saving_file_name = 'test.csv'
 
 # step 1: determine availability of each model
 model_dict, n_list = list_of_LSTM_models(model_path=model_path) 
@@ -18,11 +18,6 @@ prediction_dict = test_models(test_array_dict=test_array_dict,
                               model_dict=model_dict, 
                               percentage_list=percentage_list)
 
-result = dict(sorted(prediction_dict.items(), key=lambda item: item[1], reverse=True))
-
-for k, v in result.items():
-    print(f'{k}: {v}')
-
-
-
-
+# step 4: saving prediction results
+save_dict(saving_dict=prediction_dict, 
+          file_name=saving_file_name)

@@ -1,9 +1,11 @@
 from math import e
+from operator import index
 import pandas as pd
 import numpy as np
 import os
 import pickle
 import tensorflow as tf
+from datetime import datetime as dt
 
 def create_arrays(crypto_data_path: str, N_STEPS_list: list):
     """
@@ -15,7 +17,7 @@ def create_arrays(crypto_data_path: str, N_STEPS_list: list):
     file_name = crypto_data_path + file_list[0]
     coin_data = pd.read_csv(file_name)
     column_list = coin_data.columns
-    coin_array = np.array(coin_data.drop(coin_data[[column_list[0], column_list[-1]]], axis=1))[:] # type: ignore
+    coin_array = np.array(coin_data.drop(coin_data[[column_list[0], column_list[-1]]], axis=1))
     results = {}
 
     for N_STEPS in N_STEPS_list:
@@ -27,6 +29,7 @@ def create_arrays(crypto_data_path: str, N_STEPS_list: list):
                 temp_array = np.array([coin_array[i:i+N_STEPS]])
                 test_array = np.append(test_array, temp_array, axis=0)
             results[N_STEPS] = test_array
+        print(f'Done creating cohort-array with {N_STEPS} n_steps.')
     return results
 
 
@@ -55,10 +58,12 @@ def list_of_LSTM_models(model_path):
             temp_dict[index_name].update({temp[5]: each})
         else:
             temp_dict[index_name].update({temp[5]: each})
+    
     # fill n_list with all different n_steps
     for each in temp_dict.keys():
         n_list.append(temp_dict[each]['N_STEPS'])
     n_list = sorted(list(set(n_list)))
+    print(f'Done recording all models with n_step_list: {n_list}')
     return temp_dict, n_list
 
 
@@ -95,13 +100,14 @@ def test_models(test_array_dict: dict,
         # Each cohort
         cohort_results_list = []
         for i, each_cohort in enumerate(test_array):
-            scaled_array = scaler.fit_transform(each_cohort).reshape(1,each_cohort.shape[0],each_cohort.shape[1])
+            scaled_array = scaler.fit_transform(each_cohort).reshape(1,n_steps,4)
             y_pred = model.predict(scaled_array, verbose=0)[0][0]
             input_pred = [[y_pred, y_pred, y_pred, y_pred]]
-            real_pred_list = [each_cohort[23][3], scaler.inverse_transform(input_pred)[0][3]]
+            real_pred_list = [each_cohort[-1][3], scaler.inverse_transform(input_pred)[0][3]]
             cohort_results_list.append(real_pred_list)
             print('.', end='')
         print()
+        print(f'Done predicting for model: {each_model}.')
         # determine profit/ loss per model per percentage based on the results.
         for buy_perc in percentage_list:
             for sell_perc in percentage_list:
@@ -121,10 +127,24 @@ def test_models(test_array_dict: dict,
                         # print(f'No action: {temp_result}, {((buy_perc / 100) + 1)}, {(1 - (sell_perc / 100))}, {euro}, {coin}')
                         pass
                 #record results
-                result_name = f'{each_model}-buy={buy_perc}-sell={sell_perc}'
+                result_name = f'{each_model}-{buy_perc}-{sell_perc}'
                 if coin == 0:
                     coin = euro / cohort_results_list[-1][0]
                 results[result_name] = coin
-
-
+        print(f'Done calculating profits for model: {each_model}.')
+    print('Done calculating profits for all models.')
     return results
+
+def save_dict(saving_dict: dict, file_name: str):
+    file_name = './results/' + file_name + '_' + str(int(dt.now().timestamp()))
+    try:    
+        f = open(file_name, 'a')
+        f.write('model_name,buy_percentage,sell_percentage,result\n')
+        for k, v in saving_dict.items():
+            temp = str(k).split('-')
+            print(temp)
+            line = f'{temp[0]},{temp[1]},{temp[2]},{v}\n'
+            f.write(line)
+        f.close()
+    except Exception as e:
+        print(e)
