@@ -103,7 +103,9 @@ def test_models(test_array_dict: dict,
             input_pred = [[y_pred, y_pred, y_pred, y_pred]]
             real_pred_list = [each_cohort[-1][3], scaler.inverse_transform(input_pred)[0][3]]
             cohort_results_list.append(real_pred_list)
-            print('.', end='')
+            if i % 100 == 0:
+                char_list = ['_', '/', '(', 'O', ')', '\\', '_', '.' ]
+                print(char_list[(int(i/100))%len(char_list)], end='')
         print()
         print(f'Done predicting for model: {each_model}.')
         # determine profit/ loss per model per percentage based on the results.
@@ -111,8 +113,8 @@ def test_models(test_array_dict: dict,
             for sell_perc in percentage_list:
                 euro = 0
                 coin = 1000
-                for i in range (f_steps, len(cohort_results_list)):
-                    temp_result = cohort_results_list[i][0] / cohort_results_list[i-f_steps][1]
+                for i in range (len(cohort_results_list)):
+                    temp_result = cohort_results_list[i][0] / cohort_results_list[i][1]
                     if (euro > 0) & (temp_result > ((buy_perc / 100) + 1)):
                         # print(f'Buy action: {temp_result}, {((buy_perc / 100) + 1)}, {euro}, {coin}')
                         coin = euro / cohort_results_list[i][0]
@@ -122,14 +124,13 @@ def test_models(test_array_dict: dict,
                         euro = coin * cohort_results_list[i][0]
                         coin = 0
                     else:
-                        # print(f'No action: {temp_result}, {((buy_perc / 100) + 1)}, {(1 - (sell_perc / 100))}, {euro}, {coin}')
                         pass
                 #record results
                 result_name = f'{each_model}-{buy_perc}-{sell_perc}'
                 if coin == 0:
                     coin = euro / cohort_results_list[-1][0]
                 results[result_name] = coin
-                f = open('./results/test.csv', 'a')
+                f = open('./results/2nd test.csv', 'a')
                 f.write(f'{each_model},{buy_perc},{sell_perc},{coin}\n')
                 f.close()
         print(f'Done calculating profits for model: {each_model}.')
@@ -152,7 +153,6 @@ def save_dict(saving_dict: dict, file_name: str):
         f.write('model_name,buy_percentage,sell_percentage,result\n')
         for k, v in saving_dict.items():
             temp = str(k).split('-')
-            print(temp)
             line = f'{temp[0]},{temp[1]},{temp[2]},{v}\n'
             f.write(line)
         f.close()

@@ -3,7 +3,7 @@ from func import *
 ## input values:
 crypto_data_path = './crypto_data/'
 model_path = './models/'
-percentage_list = [1, 2, 3, 4, 5, 6, 7]
+percentage_list = [1, 2, 3, 4, 5, 6]
 saving_file_name = '2nd'
 
 # step 1: determine availability of each model
