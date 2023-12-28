@@ -4,7 +4,7 @@ from func import *
 crypto_data_path = './crypto_data/'
 model_path = './models/'
 percentage_list = [1, 2, 3, 4, 5, 6, 7]
-saving_file_name = 'test.csv'
+saving_file_name = '2nd'
 
 # step 1: determine availability of each model
 model_dict, n_list = list_of_LSTM_models(model_path=model_path) 

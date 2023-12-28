@@ -148,7 +148,7 @@ def save_dict(saving_dict: dict, file_name: str):
     Returns:
         None: None
     """    
-    file_name = './results/' + file_name + '_' + str(int(dt.now().timestamp()))
+    file_name = './results/' + file_name + '_' + str(int(dt.now().timestamp())) + '.csv'
     try:    
         f = open(file_name, 'a')
         f.write('model_name,buy_percentage,sell_percentage,result\n')
